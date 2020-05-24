@@ -9,7 +9,7 @@ var uiController = (function () {
   return {
     getInput: function () {
       return {
-        type: document.querySelector(DOMstrings.inputType).value,
+        type: document.querySelector(DOMstrings.inputType).value, // exp, inc
         description: document.querySelector(DOMstrings.inputDescription).value,
         value: document.querySelector(DOMstrings.inputValue).value,
       };
@@ -17,25 +17,45 @@ var uiController = (function () {
     getDOMstrings: function () {
       return DOMstrings;
     },
+    addListItem: function (item, type) {
+      // Орлого зарлагын элементийг агуулсан HTML-ийг бэлтгэнэ
+      var html;
+      if (type === "inc") {
+        list = ".income__list";
+        html =
+          '<div class="item clearfix" id="income-%id%"><div class="item__description">%%DESCRIPTION%%</div><div class="right clearfix"><div class="item__value">??VALUE??</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+      } else {
+        list = ".expense__list";
+        html =
+          '<div class="item clearfix" id="expense-%id%"><div class="item__description">%%DESCRIPTION%%</div><div class="right clearfix"><div class="item__value">??VALUE??</div><div class="item__percentage">21%</div><div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+      }
+      // Тэр HTML дотроо зарлагын утгуудыг REPLACE ашиглан өөрчилнө
+      html = html.replace("%id%", item.id);
+      html = html.replace("%%DESCRIPTION%%", item.description);
+      html = html.replace("??VALUE??", item.value);
+      // Бэлтгэсэн HTML-ээ DOM руу хийж өгнө
+      document.querySelector(list).insertAdjacentHTML("beforeend", html);
+    },
   };
 })();
 
 // Санхүүтэй ажиллах контроллер
 var financeController = (function () {
+  // private data
   var Income = function (id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
   };
-
+  // private data
   var Expense = function (id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
   };
-
+  // private data
   var data = {
-    allItems: {
+    items: {
       inc: [],
       exp: [],
     },
@@ -44,15 +64,46 @@ var financeController = (function () {
       exp: 0,
     },
   };
+
+  return {
+    addItem: function (type, desc, val) {
+      var item, id;
+
+      if (data.items[type].length === 0) id = 1;
+      else {
+        id = data.items[type][data.items[type].length - 1].id + 1;
+      }
+      if (data.items[type])
+        if (type === "inc") {
+          item = new Income(id, desc, val);
+        } else {
+          item = new Expense(id, desc, val);
+        }
+
+      data.items[type].push(item);
+
+      return item;
+    },
+
+    seeData: function () {
+      return data;
+    },
+  };
 })();
 
 // Програмын холбогч контроллер
 var appController = (function (uiController, financeController) {
   var ctrlAddItem = function () {
     // 1. Оруулах өгөгдлийг дэлгэцээс олж авна.
-    console.log(uiController.getInput());
+    var input = uiController.getInput();
     // 2. Олж авсан өгөгдлүүдээ санхүүгийн конторллерт дамжуулж хадгална.
+    var item = financeController.addItem(
+      input.type,
+      input.description,
+      input.value
+    );
     // 3. Олж авсан өгөгдлүүдээ вэб дээрээ тохирох хэсэгт гаргана.
+    uiController.addListItem(item, input.type);
     // 4. Төсвийг тооцоолно.
     // 5. Эцсийн үлдэгдэл, тооцоог дэлгэцэнд гаргана.
   };
@@ -64,10 +115,7 @@ var appController = (function (uiController, financeController) {
     });
 
     document.addEventListener("keypress", function (event) {
-      if (
-        event.keyCode === 13 ||
-        /* Дээр үеийн browser - ууд дээр ажиллах*/ event.which === 13
-      ) {
+      if (event.keyCode === 13 || event.which === 13) {
         ctrlAddItem();
       }
     });
