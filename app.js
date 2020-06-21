@@ -16,7 +16,7 @@ var uiController = (function () {
     dateLabel: ".budget__title--month",
   };
   var nodeListforEach = function (list, callback) {
-    for (i = 0; i < list.length; i++) {
+    for (var i = 0; i < list.length; i++) {
       callback(list[i], i);
     }
   };
@@ -43,6 +43,21 @@ var uiController = (function () {
       document.querySelector(DOMstrings.dateLabel).textContent =
         unuudur.getFullYear() + " оны " + unuudur.getMonth() + "-р сар: ";
     },
+
+    changeType: function () {
+      var fields = document.querySelectorAll(
+        DOMstrings.inputType +
+          ", " +
+          DOMstrings.inputDescription +
+          ", " +
+          DOMstrings.inputValue
+      );
+      nodeListforEach(fields, function (el) {
+        el.classList.toggle("red-focus");
+      });
+      document.querySelector(DOMstrings.addBtn).classList.toggle("red");
+    },
+
     getInput: function () {
       return {
         type: document.querySelector(DOMstrings.inputType).value, // exp, inc
@@ -305,7 +320,15 @@ var appController = (function (uiController, financeController) {
         ctrlAddItem();
       }
     });
+
     document
+      .querySelector(DOM.inputType)
+      .addEventListener("change", uiController.changeType);
+
+    document
+      .querySelector(DOMstrings.inputType)
+      .addEventListener("change", uiController.changeType)
+
       .querySelector(DOM.containerDIV)
       .addEventListener("click", function (event) {
         var id = event.target.parentNode.parentNode.parentNode.parentNode.id;
